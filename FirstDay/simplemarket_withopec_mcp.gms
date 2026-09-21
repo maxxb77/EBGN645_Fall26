@@ -25,19 +25,23 @@ positive variable Qd(r), Qs(r) ;
 positive variable X(r) "exports" ;
 variable W "total welfare" ; 
 
-equation objfn, market_clearing_usa, market_clearing_row ; 
+equation objfn, market_clearing(r) ; 
 
 objfn.. W =e=
     sum(r, a(r) * Qd(r) + b(r) * Qd(r) * Qd(r) / 2 
     - c(r) * Qs(r) - d(r) * Qs(r) * Qs(r) / 2 ) 
     - sum(r,e * X(r)); 
 
-equation market_clearing_opec; 
-
+$ontext
 market_clearing_usa.. Qd("USA") + X("USA") =e= Qs("USA") ;
 market_clearing_opec.. Qd("OPEC") + X("OPEC") =e= Qs("OPEC") ;
 market_clearing_row.. Qd("ROW") =e= Qs("ROW") + X("USA") + X("OPEC")  ; 
+$offtext
 
+alias(r,rr) ; 
+market_clearing(r).. Qs(r) + sum(rr$[not sameas(rr,"ROW")], X(rr) )$sameas(r,"ROW") 
+                     =g= Qd(r) + X(r)$[sameas(r,"USA") or sameas(r,"OPEC")]
+;
 model simple /all/ ; 
 
 solve simple using QCP maximizing W ; 
@@ -45,21 +49,39 @@ solve simple using QCP maximizing W ;
 parameter rep ; 
 rep("BAU","Qd",r) = qd.l(r) ; 
 rep("BAU","Qs",r) = qs.l(r) ; 
-rep("BAU","P",'USA') = market_clearing_usa.m ; 
-rep("BAU","P",'ROW') = market_clearing_row.m ; 
-rep("BAU","P",'OPEC') = market_clearing_row.m ; 
+rep("BAU","P",r) = market_clearing.m(r) ; 
+
+
+execute_unload 'rep_opec_mcp.gdx' ; 
+
+
+*!!!!! begin mcp
+
+$exit
 
 
 
-c("OPEC") = 0.5 * c("OPEC") ; 
 
 
-solve simple using QCP maximizing W ; 
-parameter rep ; 
-rep("shock","Qd",r) = qd.l(r) ; 
-rep("shock","Qs",r) = qs.l(r) ; 
-rep("shock","P",'USA') = market_clearing_usa.m ; 
-rep("shock","P",'ROW') = market_clearing_row.m ; 
 
-execute_unload 'alldata_simple.gdx' ; 
+positive variable P(r) ; 
+equation foc_qd(r), foc_qs(r), foc_x(r) ; 
 
+foc_qd(r).. P(r) =g= a(r) + b(r)*Qd(r) ;
+foc_qs(r).. c(r)+d(r)*Qs(r) =g= P(r) ; 
+foc_x(r)$[sameas(r,"USA") or sameas(r,"OPEC")]..
+    e + P(r) =g= P("ROW") ; 
+
+model opec_mcp
+/
+foc_qd.qd
+foc_qs.qs
+foc_x.X
+market_clearing.P
+/;
+
+P.l(r) = - market_clearing.m(r) ; 
+
+opec_mcp.iterlim = 0 ; 
+
+solve opec_mcp using mcp; 
