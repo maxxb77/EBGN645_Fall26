@@ -39,8 +39,11 @@ market_clearing_row.. Qd("ROW") =e= Qs("ROW") + X("USA") + X("OPEC")  ;
 $offtext
 
 alias(r,rr) ; 
-market_clearing(r).. Qs(r) + sum(rr$[not sameas(rr,"ROW")], X(rr) )$sameas(r,"ROW") 
-                     =g= Qd(r) + X(r)$[sameas(r,"USA") or sameas(r,"OPEC")]
+market_clearing(r).. Qs(r) 
+                     + sum(rr$[not sameas(rr,"ROW")], X(rr) )$sameas(r,"ROW") 
+                     =g= 
+                     Qd(r) 
+                     + X(r)$[sameas(r,"USA") or sameas(r,"OPEC")]
 ;
 model simple /all/ ; 
 
@@ -49,7 +52,7 @@ solve simple using QCP maximizing W ;
 parameter rep ; 
 rep("BAU","Qd",r) = qd.l(r) ; 
 rep("BAU","Qs",r) = qs.l(r) ; 
-rep("BAU","P",r) = market_clearing.m(r) ; 
+rep("BAU","P",r) = -market_clearing.m(r) ; 
 
 
 execute_unload 'rep_opec_mcp.gdx' ; 
@@ -57,31 +60,24 @@ execute_unload 'rep_opec_mcp.gdx' ;
 
 *!!!!! begin mcp
 
-$exit
-
-
-
-
-
-
 positive variable P(r) ; 
-equation foc_qd(r), foc_qs(r), foc_x(r) ; 
 
-foc_qd(r).. P(r) =g= a(r) + b(r)*Qd(r) ;
-foc_qs(r).. c(r)+d(r)*Qs(r) =g= P(r) ; 
-foc_x(r)$[sameas(r,"USA") or sameas(r,"OPEC")]..
-    e + P(r) =g= P("ROW") ; 
+equation foc_qs(r), foc_qd(r), foc_x(r) ; 
+
+foc_qs(r).. c(r) + d(r) * Qs(r) =g= P(r) ; 
+foc_qd(r)..   P(r) =g= a(r)+b(r)*Qd(r) ; 
+foc_x(r)$[sameas(r,"USA") or sameas(r,"OPEC")].. e + P(r) =g= P("ROW") ; 
 
 model opec_mcp
 /
-foc_qd.qd
-foc_qs.qs
+market_clearing.P,
+foc_qs.qs,
+foc_qd.qd,
 foc_x.X
-market_clearing.P
 /;
 
-P.l(r) = - market_clearing.m(r) ; 
+P.l(r) = -market_clearing.m(r) ; 
+opec_mcp.iterlim=0 ; 
+solve opec_mcp using mcp ; 
 
-opec_mcp.iterlim = 0 ; 
-
-solve opec_mcp using mcp; 
+$exit
