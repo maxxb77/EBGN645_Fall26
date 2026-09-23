@@ -26,3 +26,21 @@ eq_hourlimit.. hbar =g= sum(i,h(i) * X(i)) ;
 model ripley /all/ ;
 
 solve ripley using lp maximizing Z ; 
+
+equation foc_x ; 
+positive variable lambda ; 
+
+foc_x(i).. lambda * h(i) =g= r(i) - c(i) ; 
+
+model ripley_mcp 
+/
+foc_x.x,
+eq_hourlimit.lambda
+/;
+
+lambda.l = -eq_hourlimit.m ; 
+
+ripley_mcp.iterlim = 0 ; 
+solve ripley_mcp using mcp ; 
+
+execute_unload 'ripley_mcp.gdx' ; 
