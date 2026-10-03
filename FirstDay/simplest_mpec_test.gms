@@ -111,11 +111,11 @@ scalar beta ;
 beta = d("row") * b("row") / (d("row")-b("row")) ; 
 
 mpec_foc_x.. e+P("USA") + (b("USA") * Qd("USA"))  
-            =g= 
-            P("ROW") + beta * X ;  
+             =g= 
+             P("ROW") + beta * X ;  
 
-mpec_market_clearing(r).. Qs(r) + X$sameas(r,"ROW") 
-                 =g= Qd(r) + X$sameas(r,"USA")  ;
+mpec_market_clearing(r)..     Qs(r) + X$sameas(r,"ROW") 
+                          =g= Qd(r) + X$sameas(r,"USA")  ;
 
 model mpec_mcp 
 /
