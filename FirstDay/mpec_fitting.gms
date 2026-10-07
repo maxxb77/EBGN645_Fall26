@@ -135,54 +135,63 @@ rep("MPEC_MCP","Qs",r) = qs.l(r) ;
 rep("MPEC_MCP","Qd",r) = qd.l(r) ;  
 
 
-
 *========= BEGIN FITTING MPEC =============
+equations alma_foc_qs(r), alma_foc_qd(r), alma_foc_x,
+          alma_market_clearing(r), fitting_objective ;
 
+variable chat(r), Z ;
+positive variable dhat(r) ;
+negative variable bhat(r) ;
 
-equation alma_foc_qs, alma_foc_qd, alma_foc_x, alma_market_clearing ; 
+alma_foc_qs(r)..
+   chat(r) + dhat(r) * Qs(r)
+   =g= P(r) + (bhat("USA") * Qd("USA"))$sameas(r,"USA") ;
 
-variable chat, dhat ; 
+alma_foc_qd(r)..
+   P(r) =g= pbar(r) + bhat(r) * (Qd(r) - qbar_d(r)) ;
 
-* conversion to alma_mcp
-alma_foc_qs(r).. 
-chat(r)+dhat(r)*Qs(r) =g= P(r) + (b("USA") * Qd("USA"))$sameas(r,"USA") ; 
+alma_foc_x..
+   e + P("USA") + bhat("USA") * Qd("USA")
+   =g= P("ROW")
+       + dhat("ROW") * bhat("ROW")
+         / (dhat("ROW") - bhat("ROW")) * X ;
 
-alma_foc_qd(r).. P(r)=g=a(r)+b(r)*Qd(r) ; 
+alma_market_clearing(r)..
+   Qs(r) + X$sameas(r,"ROW")
+   =g= Qd(r) + X$sameas(r,"USA") ;
 
-scalar beta ; 
-
-beta = d("row") * b("row") / (d("row")-b("row")) ; 
-
-alma_foc_x.. e+P("USA") + (b("USA") * Qd("USA"))  
-             =g= 
-             P("ROW") + dhat("row") * b("row") / (dhat("row")-b("row")) * X ;  
-
-alma_market_clearing(r)..     Qs(r) + X$sameas(r,"ROW") 
-                          =g= Qd(r) + X$sameas(r,"USA")  ;
-
-equation fitting_objective ; 
-variable Z ; 
-
-fitting_objective.. Z =e= 
-    sum(r, power((p(r)-pbar(r)/ pbar(r)),2) 
-           + power((qs(r)-qbar_s(r))/qbar_s(r),2)
-           + power((qd(r)-qbar_d(r))/qbar_d(r),2)  )
-           +  power(((x-xref)/xref),2); 
+fitting_objective.. Z =e=
+   sum(r,
+       power((P(r) - pbar(r)) / pbar(r), 2)
+     + power((Qs(r) - qbar_s(r)) / qbar_s(r), 2)
+     + power((Qd(r) - qbar_d(r)) / qbar_d(r), 2) ) ;
 
 model alma_fitting
 /
-fitting_objective,
-alma_foc_qs.Qs,
-alma_foc_qd.Qd,
-alma_foc_x.X,
-alma_market_clearing.P
-/;
+   fitting_objective,
+   alma_foc_qs.Qs,
+   alma_foc_qd.Qd,
+   alma_foc_x.X,
+   alma_market_clearing.P
+/ ;
 
-solve alma_fitting using mpec minimizing Z ; 
+dhat.fx(r) = d(r) ;
+bhat.up(r) = -1e-6 ;
+bhat.fx("ROW") = b("ROW") ;
+chat.l(r) = c(r) ;
+bhat.l(r) = b(r) ;
+P.l(r) = pbar(r) ;
+Qs.l(r) = qbar_s(r) ;
+Qd.l(r) = qbar_d(r) ;
+X.l = xref ;
+solve alma_fitting using mpec minimizing Z ;
 
-chat.up("usa") = c("usa") ; 
-dhat.lo("usa") = d("usa") ; 
+parameter rep_fitted ;
+rep_fitted(r,"pbar") = pbar(r) ;
+rep_fitted(r,"p") = P.l(r) ;
+rep_fitted(r,"qbar_d") = qbar_d(r) ;
+rep_fitted(r,"qd") = Qd.l(r) ;
+rep_fitted(r,"qbar_s") = qbar_s(r) ;
+rep_fitted(r,"qs") = Qs.l(r) ;
 
-parameter rep ; 
-
-execute_unload 'alma_fitted.gdx' ; 
+execute_unload 'alma_fitted.gdx' ;
