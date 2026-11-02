@@ -1,0 +1,13 @@
+r,i,capacity_type,value
+W,solar,existing,100
+W,solar,maximum,800
+W,wind,existing,200
+W,wind,maximum,600
+W,gas,existing,200
+W,gas,maximum,1000
+E,solar,existing,0
+E,solar,maximum,800
+E,wind,existing,100
+E,wind,maximum,300
+E,gas,existing,400
+E,gas,maximum,1000

@@ -1,0 +1,10 @@
+i,cost_type,value
+solar,investment,55000
+solar,fixed_om,15000
+solar,vom,0
+wind,investment,100000
+wind,fixed_om,40000
+wind,vom,0
+gas,investment,60000
+gas,fixed_om,15000
+gas,vom,65

@@ -1,0 +1,13 @@
+r,i,h,value
+W,solar,day,0.5
+W,solar,night,0
+W,wind,day,0.5
+W,wind,night,0.6
+W,gas,day,1
+W,gas,night,1
+E,solar,day,0.4
+E,solar,night,0
+E,wind,day,0.3
+E,wind,night,0.35
+E,gas,day,1
+E,gas,night,1
