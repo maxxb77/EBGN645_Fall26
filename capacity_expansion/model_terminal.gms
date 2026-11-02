@@ -104,8 +104,8 @@ valtran(r,rr)  = yes$(arcData(r,rr) > 0);
 
 
 Scalars
-    g                  "terminal annual COST growth rate" / 0.03 /
-    drate              "discount rate (overrides discount.csv, as in model.gms)" / 0.04 /
+    g                  "terminal annual COST growth rate" / 0.01 /
+    drate              "discount rate (overrides discount.csv, as in model.gms)" / 0.05 /
     demand_growth      "annual demand growth after the input horizon" / 0.02 /
     extra_years        "additional years for extend_horizon" / 20 /
     lifetime           "generation accounting life in years" / 20 /
@@ -295,8 +295,7 @@ loop(tc,
             + 0.5*qGen(i)*sqr(GEN.l(r,i,h,t)))) + eps;
     rep(tc,'pv_cost','all','all','all',t)$base_year(t) =
         delta(t)*rep(tc,'annual_cost','all','all','all',t) + eps;
-* Method-specific objectives use DIFFERENT horizons/terminal credits.
-* Compare pv_cost over the common years when comparing actual expenditure.
+
     rep(tc,'objective','all','all','all',t)$terminal_year(t) = tot_cost.l + eps;
     rep(tc,'modelstat','all','all','all',t)$terminal_year(t) = cem_terminal.modelstat;
     rep(tc,'solvestat','all','all','all',t)$terminal_year(t) = cem_terminal.solvestat;
